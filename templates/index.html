@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Educational Symptom Checker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <main class="card">
+    <p class="eyebrow">Educational project</p>
+    <h1>Symptom checker</h1>
+    <p>Select the symptoms you want to include. This tool does not diagnose illness.</p>
+    {% if not model_available %}
+      <p class="notice" role="status">Model not trained yet. Add your dataset to <code>data/raw/</code>, then follow the README training steps.</p>
+    {% else %}
+      <form action="{{ url_for('predict') }}" method="post">
+        <fieldset>
+          <legend>Symptoms</legend>
+          <div class="symptom-list">
+          {% for symptom in symptoms %}
+            <label><input type="checkbox" name="symptoms" value="{{ symptom }}" {% if symptom in selected_symptoms|default([]) %}checked{% endif %}> {{ symptom|replace('_', ' ')|title }}</label>
+          {% endfor %}
+          </div>
+        </fieldset>
+        <button type="submit">Get an educational prediction</button>
+      </form>
+      {% if prediction %}<section class="result" aria-live="polite"><h2>Possible dataset label</h2><p>{{ prediction }}</p></section>{% endif %}
+    {% endif %}
+    <aside class="disclaimer"><strong>Medical disclaimer:</strong> This is a student demonstration, not medical advice or a diagnosis. Do not use it to make healthcare decisions. Contact a qualified healthcare professional about health concerns; seek emergency help for urgent symptoms.</aside>
+  </main>
+</body>
+</html>
