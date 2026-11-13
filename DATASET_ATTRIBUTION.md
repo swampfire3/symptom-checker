@@ -56,7 +56,12 @@ The original CSVs are left unchanged. The project preprocessing code trims
 disease-label whitespace; normalizes symptom text to lowercase,
 underscore-separated names; treats empty symptom cells as padding; converts
 the symptom list to binary features; and provides duplicate and alignment
-audits. Duplicate removal is for a future modeling/evaluation workflow only;
-it does not rewrite these source files. No differently spelled disease labels
+audits. Duplicate removal is applied before training and evaluation; it
+does not rewrite these source files. No differently spelled disease labels
 are silently merged. Severity weights, descriptions, and precautions remain
 separate supporting metadata, not model training features.
+
+The training workflow removes 4,616 duplicate rows before splitting and
+evaluates on the 304 remaining unique disease/symptom combinations. Metrics
+about this dataset therefore describe those unique combinations, not the raw
+row count.

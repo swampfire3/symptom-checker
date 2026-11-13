@@ -11,6 +11,9 @@
     <p class="eyebrow">Educational project</p>
     <h1>Symptom checker</h1>
     <p>Select the symptoms you want to include. This tool does not diagnose illness.</p>
+    {% if error %}
+      <p class="notice error" role="alert">{{ error }}</p>
+    {% endif %}
     {% if not model_available %}
       <p class="notice" role="status">Model not trained yet. Add your dataset to <code>data/raw/</code>, then follow the README training steps.</p>
     {% else %}
@@ -25,7 +28,29 @@
         </fieldset>
         <button type="submit">Get an educational prediction</button>
       </form>
-      {% if prediction %}<section class="result" aria-live="polite"><h2>Possible dataset label</h2><p>{{ prediction }}</p></section>{% endif %}
+      {% if predictions %}
+        <section class="result" aria-live="polite">
+          <h2>Top dataset labels</h2>
+          <p class="result-note">The model's three highest scores for the selected symptoms. These are not diagnoses or medical probabilities.</p>
+          <ol class="prediction-list">
+          {% for item in predictions %}
+            <li class="prediction{% if loop.first %} prediction-first{% endif %}">
+              <div class="prediction-head">
+                <span class="prediction-label">{{ item.label }}</span>
+                {% if item.probability is not none %}
+                  <span class="prediction-score">{{ (item.probability * 100)|round(1) }}%</span>
+                {% endif %}
+              </div>
+              {% if item.probability is not none %}
+                <div class="confidence" aria-hidden="true">
+                  <span style="width: {{ (item.probability * 100)|round(1) }}%"></span>
+                </div>
+              {% endif %}
+            </li>
+          {% endfor %}
+          </ol>
+        </section>
+      {% endif %}
     {% endif %}
     <aside class="disclaimer"><strong>Medical disclaimer:</strong> This is a student demonstration, not medical advice or a diagnosis. Do not use it to make healthcare decisions. Contact a qualified healthcare professional about health concerns; seek emergency help for urgent symptoms.</aside>
   </main>

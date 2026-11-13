@@ -11,4 +11,14 @@ input { accent-color: #24705f; }
 button { border: 0; border-radius: .5rem; padding: .8rem 1.1rem; color: white; background: #176b58; font: inherit; font-weight: 700; cursor: pointer; }
 button:hover { background: #105341; }
 .notice, .result { padding: 1rem; background: #edf7f3; border-radius: .5rem; }
+.notice.error { margin-bottom: 1rem; color: #8a2c1c; background: #fdf0ed; }
+.result { margin-top: 1.5rem; }
+.result h2 { margin-top: 0; }
+.result-note { margin: .25rem 0 1rem; color: #4b625d; font-size: .9rem; line-height: 1.5; }
+.prediction-list { display: grid; gap: .9rem; margin: 0; padding: 0; list-style: none; }
+.prediction-head { display: flex; justify-content: space-between; gap: 1rem; font-weight: 600; }
+.prediction-first .prediction-label { color: #105341; }
+.prediction-score { color: #24705f; font-variant-numeric: tabular-nums; }
+.confidence { height: .45rem; margin-top: .35rem; overflow: hidden; background: #d8e8e2; border-radius: 999px; }
+.confidence span { display: block; height: 100%; background: #24705f; border-radius: inherit; }
 .disclaimer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #cfddd8; font-size: .9rem; line-height: 1.5; }
