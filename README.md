@@ -23,7 +23,7 @@ Put the CSV you have selected in `data/raw/`. The trainer expects a wide text fo
 - one symptom name per cell (for example `high_fever` or `skin rash`);
 - empty cells used as padding for rows with fewer than 17 symptoms.
 
-Symptom text is normalized to lowercase underscore-separated names, empty padding is ignored, and duplicate disease/symptom rows are removed before evaluation. Source files stay unchanged. Dataset provenance and redistribution rights are unresolved; see `DATASET_ATTRIBUTION.md`. Do not commit dataset files.
+Symptom text is normalized to lowercase underscore-separated names, empty padding is ignored, and duplicate disease/symptom rows are removed before evaluation. Source files stay unchanged. The dataset is third-party content used under **CC BY-SA 4.0**; attribution, file hashes, change notes, and ShareAlike obligations are recorded in `DATASET_ATTRIBUTION.md`. Raw files stay untracked by default.
 
 ## Train and evaluate
 
@@ -106,6 +106,14 @@ Use feature branches and pull requests. `master` is protected: changes must pass
 
 See `CONTRIBUTING.md` for setup, branch, pull-request, and commit conventions.
 
+## Licensing
+
+- **Code** — MIT; see `LICENSE`. This covers the Python source, tests, templates, static assets, CI configuration, and `requirements.txt`.
+- **Documentation** — CC BY-NC-SA 4.0; see `LICENSE-DOCS`. This covers the Markdown documentation and the prose inside it.
+- **Dataset** — third-party content under CC BY-SA 4.0, not owned by this project; see `DATASET_ATTRIBUTION.md` for attribution and obligations.
+
+The documentation license is noncommercial. It does not make the model clinically valid, and the disclaimer below still applies to any use.
+
 ## Important limitations
 
-This prototype only predicts labels represented by the chosen dataset. Dataset provenance and quality may be uncertain, the data is highly duplicated, and the unique symptom patterns are unrealistically separable. Real symptoms and medical conditions are more complex than a checkbox dataset. The output is an educational model result—not medical guidance. For real health concerns, contact a qualified professional; seek emergency care for urgent symptoms.
+This prototype only predicts labels represented by the chosen dataset. The dataset is small and highly duplicated, and its unique symptom patterns are unrealistically separable. Real symptoms and medical conditions are more complex than a checkbox dataset. The output is an educational model result—not medical guidance. For real health concerns, contact a qualified professional; seek emergency care for urgent symptoms.
