@@ -102,7 +102,7 @@ GitHub Actions runs the same test suite on Python 3.12 and 3.14 for every push t
 
 ## Team workflow
 
-Use a private GitHub repository, feature branches, and reviewed pull requests. Every pull request should pass the GitHub Actions test workflow before merging. Keep generated model files, virtual environments, secrets, and restricted data out of commits. Teammates should follow the same Python/dependency setup and document any dataset-specific preprocessing changes.
+Use feature branches and pull requests. `master` is protected: changes must pass the GitHub Actions test workflow and resolve review conversations before merging. Keep generated model files, virtual environments, secrets, and restricted data out of commits. Teammates should follow the same Python/dependency setup and document any dataset-specific preprocessing changes.
 
 See `CONTRIBUTING.md` for setup, branch, pull-request, and commit conventions.
 
