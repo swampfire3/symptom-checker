@@ -1,10 +1,12 @@
 # Educational AI Symptom Checker
 
+[![Tests](https://github.com/swampfire3/symptom-checker/actions/workflows/tests.yml/badge.svg)](https://github.com/swampfire3/symptom-checker/actions/workflows/tests.yml)
+
 A student project that demonstrates a tree-based classifier behind a Flask interface. Training compares several models and saves a random-forest bundle by default. **It is not a medical device and must not be used to diagnose, treat, or rule out illness.**
 
 ## Requirements and setup
 
-Use Python 3.10 or newer. From the project root:
+Use Python 3.12 or newer (CI tests Python 3.12 and 3.14). From the project root:
 
 ```bash
 python -m venv .venv
@@ -80,6 +82,8 @@ The response keeps `prediction` as the top label for compatibility and adds `pre
 ```bash
 pytest
 ```
+
+GitHub Actions runs the same test suite on Python 3.12 and 3.14 for every push to `master` and every pull request.
 
 ## Project map
 
