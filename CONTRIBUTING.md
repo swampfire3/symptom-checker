@@ -24,8 +24,9 @@ pytest
 - Merge with a squash merge or a clear merge commit, then delete the branch.
 - Keep `master` in a working state.
 
-Branch protection and required reviews are not enforced on the current GitHub
-plan. Follow the conventions manually so the workflow is still predictable.
+`master` is protected: changes must go through a pull request, the `Tests`
+checks must pass, and conversations must be resolved before merging. Direct
+pushes and force pushes are blocked, including for administrators.
 
 ## What not to commit
 
