@@ -1,59 +1,72 @@
-# Dataset source, attribution, and license review
+# Dataset source, attribution, and license
 
-## Source identified for the four CSVs
+## Status: license confirmed by the project owner
 
-The filenames and dataset structure match the Kaggle dataset titled **Disease
-Symptom Prediction**, uploaded under the Kaggle handle **`itachi9604`**:
+On 2026-11-18 the project owner confirmed that the Kaggle listing for this
+dataset states **CC BY-SA 4.0** and adopted that license for the four CSVs used
+here. This file records the attribution and the obligations that come with it;
+it is a record of the project's decision, not an independent legal opinion.
 
-- Dataset page: <https://www.kaggle.com/datasets/itachi9604/disease-symptom-description-dataset>
-- Uploader handle: `itachi9604` (a separate legal or preferred name was not
-  independently verified)
-- Kaggle's displayed license: **CC BY-SA 4.0**, not CC BY 4.0.
-- License text: <https://creativecommons.org/licenses/by-sa/4.0/>
+- Dataset title: **Disease Symptom Prediction**
+- Source: <https://www.kaggle.com/datasets/itachi9604/disease-symptom-description-dataset>
+- Uploader: Kaggle handle **`itachi9604`** (no separate legal name was verified)
+- License: **Creative Commons Attribution-ShareAlike 4.0 International**
+  - Summary: <https://creativecommons.org/licenses/by-sa/4.0/>
+  - Legal code: <https://creativecommons.org/licenses/by-sa/4.0/legalcode>
 
-The four local files reviewed against this source are:
+| File | Size | SHA-256 |
+|---|---:|---|
+| `data/raw/dataset.csv` | 632,202 bytes | `ebbd391c4ba4d64f57a00eb3d0a55f0ca9b920b0c5de6b9af4234e72519c9618` |
+| `data/raw/Symptom-severity.csv` | 2,332 bytes | `cb5a84b5ebde81bb18738b7e7733bcbc5abdc667b4376893fb1774d8c444bc8d` |
+| `data/raw/symptom_Description.csv` | 11,025 bytes | `e0581662e815509596707ebb5b31efb44539562b451ecef8c1246aa713b7d832` |
+| `data/raw/symptom_precaution.csv` | 3,488 bytes | `49371294708232b928f68fc60e9837e5cab8b90d450b7bd90f7305795bb6d311` |
 
-| File | Size |
-|---|---:|
-| `data/raw/dataset.csv` | 632,202 bytes |
-| `data/raw/Symptom-severity.csv` | 2,332 bytes |
-| `data/raw/symptom_Description.csv` | 11,025 bytes |
-| `data/raw/symptom_precaution.csv` | 3,488 bytes |
+### Suggested attribution notice
 
-## Attribution and license conditions
+When redistributing these files, keep a notice equivalent to:
 
-If the dataset can be redistributed under the Kaggle listing's stated license,
-attribute it as **Disease Symptom Prediction, Kaggle uploader `itachi9604`**,
-link to the source page above, link to the CC BY-SA 4.0 license, and identify
-changes made. Do not imply that the uploader or Kaggle endorses this project.
-CC BY-SA requires appropriate credit, a license link, an indication of
-modifications, and ShareAlike licensing for adaptations. Preserve any source
-notices and comply with the license's complete terms.
+> "Disease Symptom Prediction" by Kaggle user `itachi9604`, licensed under
+> CC BY-SA 4.0 (<https://creativecommons.org/licenses/by-sa/4.0/>). Files
+> reformatted as described in the project's `DATASET_ATTRIBUTION.md`.
 
-## Coverage is not fully established; keep source files untracked for now
+Do not imply that the uploader, Kaggle, or Creative Commons endorses this
+project.
 
-The Kaggle page reports CC BY-SA 4.0 for its dataset listing, and its file
-collection is the identified source for these CSVs. However, that listing alone
-does not establish that the uploader had redistribution rights to every
-third-party description, precaution, or other incorporated content. The
-available local files do not include per-file provenance or rights statements.
-There is also a GitHub repository linked to the dataset whose repository
-metadata displays GPL-3.0; that does not resolve the licensing of these CSVs
-and should not be treated as replacing the Kaggle file license. The difference
-between the reported CC BY 4.0 and the Kaggle page's CC BY-SA 4.0 also needs to
-be resolved before distribution.
+## Obligations under CC BY-SA 4.0
 
-Therefore this project does **not** assert that all four CSVs are cleared for
-redistribution. They remain excluded by `.gitignore`. Before tracking them,
-verify the exact source/version for each file, the uploader's rights in any
-third-party material, any underlying source acknowledgements, and whether the
-Kaggle license selection covers the complete bundle. If that cannot be
-confirmed, obtain permission or use a dataset with clear file-level rights.
+- **Attribution:** credit the uploader, name the license, and link to it.
+- **Changes:** state that the files were modified and describe how.
+- **ShareAlike:** distribute adaptations of the dataset under CC BY-SA 4.0 or a
+  compatible license.
+- **No additional restrictions:** do not add legal or technical terms that
+  prevent others from exercising the license rights.
+- **No warranty:** the data is provided as-is; the licenses give no guarantee of
+  accuracy, and none is claimed here.
+
+## Redistribution and version notes
+
+The raw CSVs are **not tracked by Git** so that the repository stays small and
+generated or local data is never committed by accident. They may be redistributed
+under CC BY-SA 4.0 now that the license is confirmed, provided the attribution,
+license link, change notes, and ShareAlike terms above travel with them. Keep
+this file in any copy that includes the data.
+
+The local files are a reformatted copy, not a byte-identical copy, of the CSVs
+in the uploader's GitHub repository. They add header rows, and
+`Symptom-severity.csv` includes an extra `prognosis,5` row. The hashes above pin
+the exact version this project trains on, so results can be reproduced and the
+differences can be described accurately.
+
+Two upstream repositories linked to the dataset were also inspected. One
+displays GPL-3.0 metadata but contains no CSV files; another contains the CSVs
+but declares no license. Neither changes the Kaggle listing's CC BY-SA 4.0
+terms, but they are the reason the exact source of each file is recorded here
+rather than inferred from repository metadata.
 
 ## Project changes to the data
 
-The original CSVs are left unchanged. The project preprocessing code trims
-disease-label whitespace; normalizes symptom text to lowercase,
+The original CSVs are left unchanged on disk. The project preprocessing code
+trims disease-label whitespace; normalizes symptom text to lowercase,
 underscore-separated names; treats empty symptom cells as padding; converts
 the symptom list to binary features; and provides duplicate and alignment
 audits. Duplicate removal is applied before training and evaluation; it

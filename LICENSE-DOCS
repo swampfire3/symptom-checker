@@ -1,0 +1,31 @@
+# Documentation license
+
+The written documentation in this repository is licensed under the
+**Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+License (CC BY-NC-SA 4.0)**.
+
+- License summary: <https://creativecommons.org/licenses/by-nc-sa/4.0/>
+- Full legal code: <https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode>
+
+## What this covers
+
+| Content | License |
+|---|---|
+| Source code, tests, templates, static assets, CI config, and `requirements.txt` | MIT, see `LICENSE` |
+| Prose documentation (`*.md` files, including code samples inside them) | CC BY-NC-SA 4.0, this file |
+| Files under `data/raw/` | Third-party data under CC BY-SA 4.0, see `DATASET_ATTRIBUTION.md` |
+
+If a file is not listed above, treat it as MIT-licensed source code.
+
+## Attribution
+
+When sharing or adapting the documentation, credit it as:
+
+> Educational AI Symptom Checker documentation, Copyright (c) 2026 swampfire3
+> contributors, licensed under CC BY-NC-SA 4.0.
+
+Link to the license, indicate what you changed, and license your adaptation
+under the same terms. You may not use the documentation for commercial
+purposes. The documentation is provided without warranty, and the project's
+medical disclaimer still applies: this software is an educational demo, not a
+medical device.

@@ -30,7 +30,7 @@ pushes and force pushes are blocked, including for administrators.
 
 ## What not to commit
 
-- `data/raw/` or `data/processed/` files: dataset redistribution rights are unresolved.
+- `data/raw/` or `data/processed/` files: excluded by default to keep the repository small. The dataset is third-party CC BY-SA 4.0 content, so any committed copy must keep the attribution and change notes in `DATASET_ATTRIBUTION.md`.
 - `models/` artifacts: regenerate them with `python train_model.py`.
 - `.venv/`, `__pycache__/`, `.pytest_cache/`, coverage output, or editor files.
 - Secrets, tokens, `.env` files, or personal credentials.
@@ -54,6 +54,17 @@ Update model card benchmark table
 ```
 
 Add a body when the reason or trade-off is not obvious from the subject.
+
+## Licensing of contributions
+
+By opening a pull request you agree that your contribution is licensed under
+the terms already in the repository:
+
+- source code, tests, templates, and configuration under **MIT** (`LICENSE`);
+- documentation under **CC BY-NC-SA 4.0** (`LICENSE-DOCS`).
+
+Do not paste in code, text, datasets, or images that you cannot license on
+those terms. Third-party material needs its own attribution and license note.
 
 ## Reporting problems
 

@@ -15,9 +15,9 @@ htmlcov/
 *.pem
 *.key
 
-# Raw/processed datasets remain excluded until source and redistribution rights
-# are confirmed for every included file. To track approved files later, change
-# these rules deliberately and document the applicable attribution/license.
+# Raw/processed datasets are excluded by default to keep the repository small.
+# They are third-party CC BY-SA 4.0 content; see DATASET_ATTRIBUTION.md before
+# tracking any file, and keep the attribution and change notes with it.
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*

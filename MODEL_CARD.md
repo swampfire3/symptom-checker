@@ -15,7 +15,7 @@ Intended for demonstrating data checks, model comparison, evaluation, artifact s
 ## Data
 
 - Four CSVs whose structure matches the Kaggle dataset **Disease Symptom Prediction**, uploaded by `itachi9604`.
-- The Kaggle listing displays **CC BY-SA 4.0**, but redistribution rights for every included file are not confirmed. The files remain untracked; see `DATASET_ATTRIBUTION.md`.
+- The Kaggle listing's **CC BY-SA 4.0** is the project's confirmed license for these files. Attribution, hashes, and change notes are in `DATASET_ATTRIBUTION.md`; the raw files remain untracked by default.
 - The primary CSV has 4,920 rows and 41 disease classes. Only **304 disease/symptom combinations are unique**; 4,616 rows are duplicates.
 - Each class is represented by 5–10 unique symptom combinations.
 - Preprocessing trims disease labels, normalizes symptom text, treats empty cells as padding, and creates binary features. Duplicate rows are removed before any split. Source files are not rewritten.
@@ -47,7 +47,7 @@ These scores mean every unique symptom combination in this dataset maps cleanly 
 - Random-forest probabilities are not calibrated for medical decision-making.
 - Class labels and symptom names come from the dataset and may contain typos.
 - There is no external validation, fairness analysis, or clinical review.
-- Dataset licensing remains unresolved, so the project cannot be published with the source CSVs until that is settled.
+- The dataset is third-party content under CC BY-SA 4.0, so any redistributed copy must keep the attribution, license link, change notes, and ShareAlike terms recorded in `DATASET_ATTRIBUTION.md`.
 
 ## Safety and legal notes
 
