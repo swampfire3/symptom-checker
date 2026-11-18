@@ -93,14 +93,18 @@ GitHub Actions runs the same test suite on Python 3.12 and 3.14 for every push t
 - `src/predictor.py`: model loading, input conversion, and top-3 probability support.
 - `train_model.py`: audit, benchmark, evaluate, and save workflow.
 - `templates/` and `static/`: browser interface and styling.
-- `tests/`: preprocessing, modeling, bundle, and request-validation checks.
+- `tests/`: preprocessing, modeling, bundle, CLI, and request-validation checks.
 - `data/raw/`: locally added source CSVs; ignored by Git.
 - `models/`: generated bundle and metrics; ignored by Git.
+- `.github/workflows/tests.yml`: GitHub Actions test workflow.
+- `CONTRIBUTING.md`: setup, branch, pull-request, and commit conventions.
 - `MODEL_CARD.md`: intended use, evaluation, and limitations.
 
 ## Team workflow
 
-Use a private GitHub repository, feature branches, and reviewed pull requests. Keep generated model files, virtual environments, secrets, and restricted data out of commits. Teammates should follow the same Python/dependency setup and document any dataset-specific preprocessing changes.
+Use a private GitHub repository, feature branches, and reviewed pull requests. Every pull request should pass the GitHub Actions test workflow before merging. Keep generated model files, virtual environments, secrets, and restricted data out of commits. Teammates should follow the same Python/dependency setup and document any dataset-specific preprocessing changes.
+
+See `CONTRIBUTING.md` for setup, branch, pull-request, and commit conventions.
 
 ## Important limitations
 
