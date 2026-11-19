@@ -45,11 +45,12 @@ project.
 
 ## Redistribution and version notes
 
-The raw CSVs are **not tracked by Git** so that the repository stays small and
-generated or local data is never committed by accident. They may be redistributed
-under CC BY-SA 4.0 now that the license is confirmed, provided the attribution,
-license link, change notes, and ShareAlike terms above travel with them. Keep
-this file in any copy that includes the data.
+The four CSVs are tracked in Git under `data/raw/` so a fresh clone can train
+and run the demo. They are redistributed under CC BY-SA 4.0 with the attribution
+above, and `data/raw/README.md` repeats the notice for readers who open only that
+directory. `tests/test_dataset_files.py` checks the hashes, so an unintended
+edit fails the test suite; change the hash here and in that test together only
+when the change is deliberate.
 
 The local files are a reformatted copy, not a byte-identical copy, of the CSVs
 in the uploader's GitHub repository. They add header rows, and

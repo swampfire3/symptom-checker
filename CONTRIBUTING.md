@@ -30,7 +30,7 @@ pushes and force pushes are blocked, including for administrators.
 
 ## What not to commit
 
-- `data/raw/` or `data/processed/` files: excluded by default to keep the repository small. The dataset is third-party CC BY-SA 4.0 content, so any committed copy must keep the attribution and change notes in `DATASET_ATTRIBUTION.md`.
+- New or modified files in `data/raw/` or `data/processed/`: the four tracked CSVs are already covered by `DATASET_ATTRIBUTION.md`. Do not add other data without provenance, and update the recorded hash and `tests/test_dataset_files.py` together if a tracked file changes intentionally.
 - `models/` artifacts: regenerate them with `python train_model.py`.
 - `.venv/`, `__pycache__/`, `.pytest_cache/`, coverage output, or editor files.
 - Secrets, tokens, `.env` files, or personal credentials.
