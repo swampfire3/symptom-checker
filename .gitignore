@@ -15,11 +15,16 @@ htmlcov/
 *.pem
 *.key
 
-# Raw/processed datasets are excluded by default to keep the repository small.
-# They are third-party CC BY-SA 4.0 content; see DATASET_ATTRIBUTION.md before
-# tracking any file, and keep the attribution and change notes with it.
+# Raw data: the four dataset files and their attribution note are versioned.
+# Everything else in data/raw/ stays local. The tracked files are third-party
+# CC BY-SA 4.0 content; see DATASET_ATTRIBUTION.md before changing them.
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/README.md
+!data/raw/dataset.csv
+!data/raw/Symptom-severity.csv
+!data/raw/symptom_Description.csv
+!data/raw/symptom_precaution.csv
 data/processed/*
 !data/processed/.gitkeep
 

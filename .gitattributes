@@ -1,0 +1,3 @@
+# Keep the tracked dataset bytes stable so the SHA-256 hashes recorded in
+# DATASET_ATTRIBUTION.md stay valid even when core.autocrlf converts text files.
+data/raw/*.csv -text

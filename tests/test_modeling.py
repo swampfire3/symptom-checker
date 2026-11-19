@@ -220,6 +220,43 @@ def test_bundle_round_trip_writes_model_and_metrics(tmp_path):
     assert document["metrics"]["holdout"]["accuracy"] == 1.0
 
 
+def test_save_bundle_keeps_previous_files_when_a_write_fails(tmp_path, monkeypatch):
+    bundle = build_bundle(
+        DecisionTreeClassifier(random_state=42),
+        "tree_baseline",
+        ["fever", "cough"],
+        ["Alpha", "Beta"],
+        {"holdout": {"accuracy": 1.0}},
+        {"filename": "dataset.csv"},
+        trained_at="2026-01-01T00:00:00+00:00",
+    )
+    model_path, metrics_path = save_bundle(
+        bundle, tmp_path / "model.joblib", tmp_path / "metrics.json"
+    )
+    original_model = model_path.read_bytes()
+    original_metrics = metrics_path.read_text()
+
+    def fail_to_write(*args, **kwargs):
+        raise OSError("simulated disk failure")
+
+    monkeypatch.setattr("src.modeling.joblib.dump", fail_to_write)
+    replacement = build_bundle(
+        DecisionTreeClassifier(random_state=42),
+        "tree_baseline",
+        ["fever"],
+        ["Alpha"],
+        {},
+        {"filename": "other.csv"},
+        trained_at="2026-02-02T00:00:00+00:00",
+    )
+    with pytest.raises(OSError, match="simulated disk failure"):
+        save_bundle(replacement, model_path, metrics_path)
+
+    assert model_path.read_bytes() == original_model
+    assert metrics_path.read_text() == original_metrics
+    assert {path.name for path in tmp_path.iterdir()} == {"model.joblib", "metrics.json"}
+
+
 def test_validate_bundle_rejects_missing_keys_and_wrong_schema():
     with pytest.raises(ValueError, match="missing"):
         validate_bundle({"schema_version": SCHEMA_VERSION})

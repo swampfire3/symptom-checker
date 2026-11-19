@@ -4,26 +4,40 @@
 
 A student project that demonstrates a tree-based classifier behind a Flask interface. Training compares several models and saves a random-forest bundle by default. **It is not a medical device and must not be used to diagnose, treat, or rule out illness.**
 
+## Quickstart
+
+```bash
+git clone https://github.com/swampfire3/symptom-checker.git
+cd symptom-checker
+make setup     # create .venv and install the pinned dependencies
+make train     # write models/symptom_disease_model.joblib
+make run       # serve http://127.0.0.1:5000
+```
+
+`make test` runs the suite and `make help` lists the targets. The Make targets assume a POSIX shell (Linux, macOS, or WSL); on native Windows, run the equivalent commands in the next two sections. The dataset is included in `data/raw/`; the trained model is generated locally and is not committed.
+
 ## Requirements and setup
 
-Use Python 3.12 or newer (CI tests Python 3.12 and 3.14). From the project root:
+Use Python 3.12 or newer (CI tests Python 3.12 and 3.14). `requirements.lock`
+pins the exact versions that were tested together, and `requirements.txt`
+declares the supported ranges. From the project root:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate       # Windows: .venv\Scripts\activate
-python -m pip install -r requirements.txt
+python -m pip install -r requirements.lock
 ```
 
 ## Dataset format
 
-Put the CSV you have selected in `data/raw/`. The trainer expects a wide text format:
+The four CSVs are included in `data/raw/`; see `data/raw/README.md` for attribution. The trainer expects a wide text format:
 
 - one `Disease` target column;
 - symptom columns named `Symptom_1` through `Symptom_17`;
 - one symptom name per cell (for example `high_fever` or `skin rash`);
 - empty cells used as padding for rows with fewer than 17 symptoms.
 
-Symptom text is normalized to lowercase underscore-separated names, empty padding is ignored, and duplicate disease/symptom rows are removed before evaluation. Source files stay unchanged. The dataset is third-party content used under **CC BY-SA 4.0**; attribution, file hashes, change notes, and ShareAlike obligations are recorded in `DATASET_ATTRIBUTION.md`. Raw files stay untracked by default.
+Symptom text is normalized to lowercase underscore-separated names, empty padding is ignored, and duplicate disease/symptom rows are removed before evaluation. Source files stay unchanged. The dataset is third-party content used under **CC BY-SA 4.0**; attribution, file hashes, change notes, and ShareAlike obligations are recorded in `DATASET_ATTRIBUTION.md`. `tests/test_dataset_files.py` fails if a tracked file changes without its recorded hash being updated.
 
 ## Train and evaluate
 
@@ -61,6 +75,8 @@ The 20% holdout (61 rows) also scores 1.000 accuracy and 1.000 macro F1 with see
 
 ## Run the web app
 
+Train the model first (see above); without a bundle the page shows a setup message instead of predictions. The predictor reloads the bundle when the file changes, so `make train` can run while the server is up.
+
 ```bash
 flask --app app run --debug
 ```
@@ -94,7 +110,7 @@ GitHub Actions runs the same test suite on Python 3.12 and 3.14 for every push t
 - `train_model.py`: audit, benchmark, evaluate, and save workflow.
 - `templates/` and `static/`: browser interface and styling.
 - `tests/`: preprocessing, modeling, bundle, CLI, and request-validation checks.
-- `data/raw/`: locally added source CSVs; ignored by Git.
+- `data/raw/`: tracked source CSVs and their attribution note.
 - `models/`: generated bundle and metrics; ignored by Git.
 - `.github/workflows/tests.yml`: GitHub Actions test workflow.
 - `CONTRIBUTING.md`: setup, branch, pull-request, and commit conventions.
@@ -102,7 +118,7 @@ GitHub Actions runs the same test suite on Python 3.12 and 3.14 for every push t
 
 ## Team workflow
 
-Use feature branches and pull requests. `master` is protected: changes must pass the GitHub Actions test workflow and resolve review conversations before merging. Keep generated model files, virtual environments, secrets, and restricted data out of commits. Teammates should follow the same Python/dependency setup and document any dataset-specific preprocessing changes.
+Use feature branches and pull requests. `master` is protected: changes must pass the GitHub Actions test workflow and resolve review conversations before merging. Keep generated model files, virtual environments, secrets, and unvetted data out of commits. Teammates should follow the same Python/dependency setup and document any dataset-specific preprocessing changes.
 
 See `CONTRIBUTING.md` for setup, branch, pull-request, and commit conventions.
 

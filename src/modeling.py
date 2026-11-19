@@ -1,7 +1,9 @@
 """Model candidates, evaluation helpers, and model-bundle artifacts."""
 
 import json
+import os
 import platform
+import tempfile
 from datetime import datetime, timezone
 from hashlib import sha256
 from importlib.metadata import PackageNotFoundError, version
@@ -247,21 +249,48 @@ def validate_bundle(bundle):
         )
 
 
+def _temporary_path(path):
+    """Create a unique sibling path so a completed write can be swapped in."""
+    handle, name = tempfile.mkstemp(
+        dir=path.parent, prefix=f".{path.name}.", suffix=".tmp"
+    )
+    os.close(handle)
+    return Path(name)
+
+
 def save_bundle(bundle, model_path, metrics_path=None):
-    """Write the model bundle and an optional model-free metrics document."""
+    """Write the bundle and optional metrics, replacing each file atomically.
+
+    Readers never observe a half-written bundle: both documents are written to
+    temporary files first and then moved into place. The metrics document is
+    derived from the same bundle, so its ``trained_at`` and dataset hash show
+    whether a model and metrics file came from the same training run.
+    """
     validate_bundle(bundle)
     model_path = Path(model_path)
     model_path.parent.mkdir(parents=True, exist_ok=True)
-    joblib.dump(bundle, model_path)
 
-    written_metrics = None
+    metrics_text = None
     if metrics_path is not None:
         metrics_path = Path(metrics_path)
         metrics_path.parent.mkdir(parents=True, exist_ok=True)
         document = {key: value for key, value in bundle.items() if key != "model"}
-        metrics_path.write_text(
-            json.dumps(document, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
-        written_metrics = metrics_path
-    return model_path, written_metrics
+        metrics_text = json.dumps(document, indent=2, sort_keys=True) + "\n"
+
+    temporary_model = _temporary_path(model_path)
+    temporary_metrics = (
+        _temporary_path(metrics_path) if metrics_path is not None else None
+    )
+    try:
+        joblib.dump(bundle, temporary_model)
+        if temporary_metrics is not None:
+            temporary_metrics.write_text(metrics_text, encoding="utf-8")
+        os.replace(temporary_model, model_path)
+        if temporary_metrics is not None:
+            os.replace(temporary_metrics, metrics_path)
+    finally:
+        temporary_model.unlink(missing_ok=True)
+        if temporary_metrics is not None:
+            temporary_metrics.unlink(missing_ok=True)
+
+    return model_path, metrics_path

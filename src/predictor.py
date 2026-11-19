@@ -20,30 +20,37 @@ class Predictor:
     def __init__(self, model_path=MODEL_PATH):
         self.model_path = Path(model_path)
         self._bundle = None
+        self._bundle_stamp = None
 
     def _load(self):
-        if self._bundle is None:
-            if not self.model_path.is_file():
-                raise ModelNotReadyError(
-                    "The prediction model is not available yet. Add a dataset to "
-                    "data/raw/ and run python train_model.py first."
-                )
-            try:
-                bundle = joblib.load(self.model_path)
-                validate_bundle(bundle)
-            except (
-                OSError,
-                EOFError,
-                KeyError,
-                ImportError,
-                pickle.UnpicklingError,
-                ValueError,
-            ) as exc:
-                raise ModelNotReadyError(
-                    f"The saved model cannot be used: {exc}"
-                ) from exc
-            self._bundle = bundle
-        return self._bundle
+        try:
+            stamp = self.model_path.stat().st_mtime_ns
+        except FileNotFoundError:
+            self._bundle = None
+            self._bundle_stamp = None
+            raise ModelNotReadyError(
+                "The prediction model is not available yet. Add a dataset to "
+                "data/raw/ and run python train_model.py first."
+            ) from None
+        if self._bundle is not None and stamp == self._bundle_stamp:
+            return self._bundle
+        try:
+            bundle = joblib.load(self.model_path)
+            validate_bundle(bundle)
+        except (
+            OSError,
+            EOFError,
+            KeyError,
+            ImportError,
+            pickle.UnpicklingError,
+            ValueError,
+        ) as exc:
+            raise ModelNotReadyError(
+                f"The saved model cannot be used: {exc}"
+            ) from exc
+        self._bundle = bundle
+        self._bundle_stamp = stamp
+        return bundle
 
     @property
     def symptoms(self):

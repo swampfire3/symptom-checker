@@ -1,9 +1,11 @@
+import os
+
 import joblib
 import pytest
 
 import app as app_module
 from app import app, predictor
-from src.modeling import build_bundle
+from src.modeling import build_bundle, save_bundle
 from src.predictor import ModelNotReadyError, Predictor
 
 
@@ -154,6 +156,37 @@ def test_predictor_uses_training_normalization_and_feature_order(tmp_path):
     loaded_model = predictor._bundle["model"]
     assert list(loaded_model.received.columns) == ["cough", "high_fever"]
     assert loaded_model.received.iloc[0].to_dict() == {"cough": 0, "high_fever": 1}
+
+
+def test_predictor_reloads_when_the_bundle_file_changes(tmp_path):
+    model_path = tmp_path / "test-model.joblib"
+    predictor = Predictor(model_path)
+
+    first = build_bundle(
+        CaptureModel("Alpha"),
+        "test_model",
+        ["cough"],
+        ["Alpha"],
+        {},
+        {"filename": "test.csv"},
+    )
+    save_bundle(first, model_path)
+    assert predictor.predict(["cough"]) == "Alpha"
+
+    second = build_bundle(
+        CaptureModel("Beta"),
+        "test_model",
+        ["cough"],
+        ["Beta"],
+        {},
+        {"filename": "test.csv"},
+    )
+    save_bundle(second, model_path)
+    # A coarse filesystem could reuse the same timestamp, so make it distinct.
+    stamp = model_path.stat().st_mtime_ns
+    os.utime(model_path, ns=(stamp + 1_000_000_000, stamp + 1_000_000_000))
+
+    assert predictor.predict(["cough"]) == "Beta"
 
 
 def test_predictor_rejects_unknown_symptoms(tmp_path):
