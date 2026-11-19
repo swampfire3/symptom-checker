@@ -1,29 +1,50 @@
 """Integrity checks for the tracked dataset files.
 
 The four CSVs are redistributed under CC BY-SA 4.0 and are a reformatted copy of
-the upstream files. Their hashes are recorded in DATASET_ATTRIBUTION.md so the
-exact version used for training stays reproducible. If a file is changed on
-purpose, update both the attribution table and this mapping in the same commit.
+the upstream files. Their hashes are recorded in DATASET_ATTRIBUTION.md, which is
+the single source of truth for this test. If a file is changed on purpose, update
+the attribution table and the file in the same commit.
 """
+
+import re
+from pathlib import Path
 
 import pytest
 
 from src.modeling import sha256_file
 
-RAW_DIR = "data/raw"
+ROOT = Path(__file__).resolve().parents[1]
+RAW_DIR = ROOT / "data" / "raw"
+ATTRIBUTION = ROOT / "DATASET_ATTRIBUTION.md"
 
-EXPECTED_SHA256 = {
-    "dataset.csv": "ebbd391c4ba4d64f57a00eb3d0a55f0ca9b920b0c5de6b9af4234e72519c9618",
-    "Symptom-severity.csv": "cb5a84b5ebde81bb18738b7e7733bcbc5abdc667b4376893fb1774d8c444bc8d",
-    "symptom_Description.csv": "e0581662e815509596707ebb5b31efb44539562b451ecef8c1246aa713b7d832",
-    "symptom_precaution.csv": "49371294708232b928f68fc60e9837e5cab8b90d450b7bd90f7305795bb6d311",
-}
+# A table row shaped like: | `data/raw/dataset.csv` | 632,202 bytes | `abc...` |
+HASH_ROW = re.compile(
+    r"^\|\s*`(?P<path>data/raw/[^`]+)`\s*\|[^|]*\|\s*`(?P<digest>[0-9a-f]{64})`\s*\|$",
+    re.MULTILINE,
+)
 
 
-@pytest.mark.parametrize("filename,expected", sorted(EXPECTED_SHA256.items()))
-def test_tracked_dataset_file_matches_recorded_hash(filename, expected):
-    path = f"{RAW_DIR}/{filename}"
-    assert sha256_file(path) == expected, (
-        f"{path} no longer matches DATASET_ATTRIBUTION.md; "
+def recorded_hashes():
+    """Return the path-to-hash mapping published in the attribution document."""
+    text = ATTRIBUTION.read_text(encoding="utf-8")
+    return {
+        match["path"]: match["digest"] for match in HASH_ROW.finditer(text)
+    }
+
+
+RECORDED = recorded_hashes()
+
+
+def test_attribution_lists_every_tracked_dataset_file():
+    tracked = {path.relative_to(ROOT).as_posix() for path in RAW_DIR.glob("*.csv")}
+    assert set(RECORDED) == tracked, (
+        "DATASET_ATTRIBUTION.md and data/raw/ disagree about which CSVs are tracked"
+    )
+
+
+@pytest.mark.parametrize("relative_path", sorted(RECORDED))
+def test_tracked_dataset_file_matches_recorded_hash(relative_path):
+    assert sha256_file(ROOT / relative_path) == RECORDED[relative_path], (
+        f"{relative_path} no longer matches DATASET_ATTRIBUTION.md; "
         "update the recorded hash deliberately if the change is intended"
     )

@@ -1,7 +1,9 @@
 # Convenience targets for the documented local workflow.
-# Run `make` or `make help` to list them.
+# The Make targets assume a POSIX shell (Linux, macOS, or WSL); native Windows
+# users should run the equivalent commands from the README.
 
-PYTHON ?= python
+# Prefer python3 when the python command is unavailable.
+PYTHON ?= $(shell command -v python3 >/dev/null 2>&1 && echo python3 || echo python)
 VENV ?= .venv
 BIN := $(VENV)/bin
 

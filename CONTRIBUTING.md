@@ -35,6 +35,18 @@ pushes and force pushes are blocked, including for administrators.
 - `.venv/`, `__pycache__/`, `.pytest_cache/`, coverage output, or editor files.
 - Secrets, tokens, `.env` files, or personal credentials.
 
+## Dependencies
+
+`requirements.txt` declares the supported ranges; `requirements.lock` pins the
+exact versions that were tested together and is what the quickstart and CI
+install. After changing a requirement, regenerate the lock and run the suite:
+
+```bash
+python -m pip install --upgrade -r requirements.txt
+python -m pip freeze > requirements.lock
+pytest
+```
+
 ## Training and evaluation changes
 
 - Do not claim clinical accuracy. Metrics describe this dataset's separability only.

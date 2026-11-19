@@ -14,10 +14,7 @@ make train     # write models/symptom_disease_model.joblib
 make run       # serve http://127.0.0.1:5000
 ```
 
-`make test` runs the suite and `make help` lists the targets. On systems without
-`make`, run the equivalent commands in the next two sections. The dataset is
-included in `data/raw/`; the trained model is generated locally and is not
-committed.
+`make test` runs the suite and `make help` lists the targets. The Make targets assume a POSIX shell (Linux, macOS, or WSL); on native Windows, run the equivalent commands in the next two sections. The dataset is included in `data/raw/`; the trained model is generated locally and is not committed.
 
 ## Requirements and setup
 
@@ -78,7 +75,7 @@ The 20% holdout (61 rows) also scores 1.000 accuracy and 1.000 macro F1 with see
 
 ## Run the web app
 
-Train the model first (see above); without a bundle the page shows a setup message instead of predictions.
+Train the model first (see above); without a bundle the page shows a setup message instead of predictions. The predictor reloads the bundle when the file changes, so `make train` can run while the server is up.
 
 ```bash
 flask --app app run --debug
