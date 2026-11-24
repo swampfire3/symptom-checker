@@ -107,6 +107,9 @@ GitHub Actions runs the same test suite on Python 3.12 and 3.14 for every push t
 - `src/preprocessing.py`: dataset checks, normalization, and duplicate audits.
 - `src/modeling.py`: candidate models, cross-validation, holdout evaluation, and bundle validation.
 - `src/predictor.py`: model loading, input conversion, and top-3 probability support.
+- `src/specialties.py`: editorial condition-to-specialty mapping and the confidence gate.
+- `scripts/reliability_eval.py`: regenerates the care-layer reliability tables.
+- `docs/reliability.md`: measured coverage, accuracy, and the chosen thresholds.
 - `train_model.py`: audit, benchmark, evaluate, and save workflow.
 - `templates/` and `static/`: browser interface and styling.
 - `tests/`: preprocessing, modeling, bundle, CLI, and request-validation checks.
