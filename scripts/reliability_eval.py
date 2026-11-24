@@ -6,6 +6,14 @@ sparse inputs from the dataset's unique symptom patterns, scores them with a
 trained bundle, and reports how coverage and accuracy trade off as the gates
 move.
 
+The estimates are in-distribution: the inputs are subsets of patterns the model
+trained on, so they describe how the deployed gate behaves, not how it would
+generalise to unseen conditions. The pattern holdout in ``train_model.py`` is
+the generalisation check.
+
+The thresholds were calibrated on the default random-forest bundle. Loading a
+different model prints a warning, because the score scales are not comparable.
+
 Usage:
     python scripts/reliability_eval.py
     python scripts/reliability_eval.py --samples-per-pattern 5 --seed 42
@@ -15,12 +23,15 @@ Usage:
 import argparse
 import itertools
 import json
+import os
 import random
 import sys
+import tempfile
 from pathlib import Path
 
 # Allow both `python scripts/reliability_eval.py` and `python -m scripts.reliability_eval`.
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
 
 import joblib
 import pandas as pd
@@ -32,6 +43,7 @@ from src.specialties import (
     EMERGENCY_LABELS,
     EMERGENCY_THRESHOLD,
     SPECIALTY_THRESHOLD,
+    is_calibrated,
     suggest_care,
 )
 
@@ -87,11 +99,37 @@ def score_inputs(bundle, inputs):
     return records
 
 
-def _format_row(name, covered, total, correct, extra=""):
+def top_score(record):
+    return record["predictions"][0]["probability"]
+
+
+def margin(record):
+    predictions = record["predictions"]
+    runner_up = predictions[1]["probability"] if len(predictions) > 1 else 0.0
+    return predictions[0]["probability"] - runner_up
+
+
+def _format_row(name, covered, total, correct):
     coverage = covered / total if total else 0.0
     accuracy = correct / covered if covered else 0.0
     wrong = covered - correct
-    print(f"  {name:<26} {coverage:>8.2%} {accuracy:>10.2%} {wrong:>10}{extra}")
+    print(f"  {name:<26} {coverage:>8.2%} {accuracy:>10.2%} {wrong:>10}")
+
+
+def write_json(path, payload):
+    """Write the report through a temporary file and replace it atomically."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle, name = tempfile.mkstemp(
+        dir=path.parent, prefix=f".{path.name}.", suffix=".tmp"
+    )
+    os.close(handle)
+    temporary = Path(name)
+    try:
+        temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def main():
@@ -102,22 +140,57 @@ def main():
     parser.add_argument("--samples-per-pattern", type=int, default=3)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--json", help="optional path for a JSON report")
+    parser.add_argument(
+        "--allow-external-bundle",
+        action="store_true",
+        help="permit deserialising a bundle from outside this repository",
+    )
     args = parser.parse_args()
 
-    model_path = Path(args.model)
+    try:
+        sizes = [int(value) for value in args.sizes.split(",") if value.strip()]
+    except ValueError:
+        raise SystemExit("--sizes must be a comma-separated list of integers.") from None
+    if not sizes or any(size < 1 for size in sizes):
+        raise SystemExit("--sizes must contain positive integers.")
+    if args.samples_per_pattern < 1:
+        raise SystemExit("--samples-per-pattern must be at least 1.")
+
+    model_path = Path(args.model).expanduser().resolve()
     if not model_path.is_file():
         raise SystemExit(f"No model bundle at {model_path}. Run `python train_model.py` first.")
+    # A joblib bundle is a pickle: loading it executes code. Only add bundles
+    # you produced to this repository, and opt in explicitly for anything else.
+    if PROJECT_ROOT not in model_path.parents and not args.allow_external_bundle:
+        raise SystemExit(
+            f"Refusing to load a bundle outside the project: {model_path}. "
+            "Use --allow-external-bundle only for a bundle you trust."
+        )
+
     bundle = joblib.load(model_path)
     validate_bundle(bundle)
 
-    sizes = [int(value) for value in args.sizes.split(",") if value.strip()]
     rng = random.Random(args.seed)
     inputs = list(sample_inputs(load_patterns(args.data), sizes, args.samples_per_pattern, rng))
+    if not inputs:
+        raise SystemExit(
+            "No evaluation inputs were produced. Check --sizes against the "
+            "dataset's symptom counts and --samples-per-pattern."
+        )
     records = score_inputs(bundle, inputs)
-
     total = len(records)
-    print(f"Care-suggestion reliability: {bundle['model_name']}")
+
+    print(f"In-distribution reliability: {bundle['model_name']}")
     print(f"  inputs: {total} sparse samples (sizes {sizes}, seed {args.seed})")
+    print(
+        "  note: inputs are subsets of patterns the model trained on; this "
+        "describes gate behaviour, not generalisation"
+    )
+    if not is_calibrated(bundle["model_name"]):
+        print(
+            f"  warning: thresholds were calibrated for random_forest, not "
+            f"{bundle['model_name']}; scores are not directly comparable"
+        )
 
     print("\nAccuracy by input size")
     print(f"  {'size':<26} {'share':>8} {'top-1':>10}")
@@ -128,18 +201,40 @@ def main():
         correct = sum(
             1 for record in subset if record["predictions"][0]["label"] == record["label"]
         )
-        print(f"  {str(size) + ' symptom(s)':<26} {len(subset) / total:>8.2%} {correct / len(subset):>10.2%}")
+        print(
+            f"  {str(size) + ' symptom(s)':<26} {len(subset) / total:>8.2%} "
+            f"{correct / len(subset):>10.2%}"
+        )
 
     print("\nSpecialty gate sweep")
     print(f"  {'threshold':<26} {'coverage':>8} {'accuracy':>10} {'wrong':>10}")
-    for threshold in (0.4, 0.5, 0.6, 0.7):
+    for threshold in (0.0, 0.4, 0.5, 0.6, 0.7):
         covered = correct = 0
         for record in records:
-            top = record["predictions"][0]
-            if top["probability"] >= threshold:
+            if top_score(record) >= threshold:
                 covered += 1
-                correct += int(top["label"] == record["label"])
+                correct += int(record["predictions"][0]["label"] == record["label"])
         _format_row(f"top score >= {threshold:.2f}", covered, total, correct)
+
+    print("\nMargin gate sweep (no absolute floor)")
+    print(f"  {'margin':<26} {'coverage':>8} {'accuracy':>10} {'wrong':>10}")
+    for threshold in (0.1, 0.2, 0.3):
+        covered = correct = 0
+        for record in records:
+            if margin(record) >= threshold:
+                covered += 1
+                correct += int(record["predictions"][0]["label"] == record["label"])
+        _format_row(f"margin >= {threshold:.2f}", covered, total, correct)
+
+    print(f"\nCombined gate at top score >= {SPECIALTY_THRESHOLD:.2f}")
+    print(f"  {'margin':<26} {'coverage':>8} {'accuracy':>10} {'wrong':>10}")
+    for threshold in (0.05, 0.15, 0.30):
+        covered = correct = 0
+        for record in records:
+            if top_score(record) >= SPECIALTY_THRESHOLD and margin(record) >= threshold:
+                covered += 1
+                correct += int(record["predictions"][0]["label"] == record["label"])
+        _format_row(f"margin >= {threshold:.2f}", covered, total, correct)
 
     print("\nEmergency gate sweep")
     print(f"  {'threshold':<26} {'recall':>8} {'false alarms':>14}")
@@ -169,25 +264,38 @@ def main():
         for record, outcome in zip(records, outcomes)
         if outcome["kind"] == "emergency"
     ]
-    specialty_correct = sum(1 for record, _ in specialty if record["predictions"][0]["label"] == record["label"])
+    specialty_correct = sum(
+        1 for record, _ in specialty if record["predictions"][0]["label"] == record["label"]
+    )
     emergency_caught = sum(1 for record, _ in emergency if record["label"] in EMERGENCY_LABELS)
     emergency_false = sum(1 for record, _ in emergency if record["label"] not in EMERGENCY_LABELS)
     uncertain = sum(1 for outcome in outcomes if outcome["kind"] == "uncertain")
+
+    high_confidence = [record for record in records if top_score(record) >= SPECIALTY_THRESHOLD]
+    high_confidence_emergency = sum(
+        1 for record in high_confidence if record["predictions"][0]["label"] in EMERGENCY_LABELS
+    )
 
     print(
         f"\nSelected policy (specialty {SPECIALTY_THRESHOLD:.2f}, "
         f"emergency {EMERGENCY_THRESHOLD:.2f})"
     )
+    if specialty:
+        print(
+            f"  specialty suggestions: {len(specialty)} ({len(specialty) / total:.1%}), "
+            f"top-1 correct: {specialty_correct}/{len(specialty)} "
+            f"({specialty_correct / len(specialty):.1%})"
+        )
+    else:
+        print("  specialty suggestions: 0")
     print(
-        f"  specialty suggestions: {len(specialty)} ({len(specialty) / total:.1%}), "
-        f"top-1 correct: {specialty_correct / len(specialty):.1%}"
-        if specialty
-        else "  specialty suggestions: 0"
+        f"  emergency flags: {len(emergency)} "
+        f"({emergency_caught} true, {emergency_false} false)"
     )
     print(
-        f"  emergency flags: {len(emergency)}, "
-        f"true emergencies caught: {emergency_caught}/{len(true_emergencies)}, "
-        f"false alarms: {emergency_false}"
+        f"  of {len(high_confidence)} inputs scoring >= {SPECIALTY_THRESHOLD:.2f}: "
+        f"{high_confidence_emergency} routed to emergency, "
+        f"{len(high_confidence) - high_confidence_emergency} specialty suggestions"
     )
     print(f"  abstained: {uncertain} ({uncertain / total:.1%})")
 
@@ -214,7 +322,7 @@ def main():
                 "abstained": uncertain,
             },
         }
-        Path(args.json).write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        write_json(args.json, report)
         print(f"\nWrote {args.json}")
 
 

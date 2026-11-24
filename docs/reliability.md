@@ -61,12 +61,24 @@ With specialty 0.60 and emergency 0.30 on the 2,672 inputs:
   false alarms** (3.7% of non-emergency inputs).
 - **2,266 abstentions (84.8%)**.
 
-The 249 specialty outcomes exclude the 39 inputs routed to emergency, 32 of
-which were correct and 7 wrong. Abstention is the normal outcome for sparse
-input; that is the intended behaviour, not a failure.
+Of the 288 inputs scoring at or above 0.60, 39 had an emergency label as their
+top prediction and were routed to the emergency outcome (32 correct, 7 wrong);
+the other 249 became specialty suggestions, all correct. The 157 emergency
+flags also include lower-confidence flags between 0.30 and 0.60, so they are
+not a subset of those 288.
+
+Abstention is the normal outcome for sparse input; that is the intended
+behaviour, not a failure.
 
 ## Caveats
 
+- **These estimates are in-distribution.** The inputs are symptom subsets of
+  patterns the model was trained on, so they measure how the shipped gate
+  behaves on the shipped model, not how it generalises to unseen conditions.
+  The pattern holdout in `train_model.py` is the generalisation check.
+- **The thresholds describe the random-forest bundle.** Logistic regression,
+  the decision tree, and Jaccard k-NN produce differently scaled scores; rerun
+  this harness and recalibrate before using the gate with them.
 - The mapping from condition to specialty is editorial. It was written for this
   project and has not been reviewed by clinicians.
 - These thresholds are product decisions about how often the system should

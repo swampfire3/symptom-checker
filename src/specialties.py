@@ -6,9 +6,13 @@ of specialist that usually manages it, and it abstains when the model's score
 is too low to justify naming one. The mapping was written for this project and
 has not been reviewed by clinicians.
 
-The gate thresholds were chosen from the reliability tables produced by
-``scripts/reliability_eval.py``; see ``docs/reliability.md`` for the numbers.
+The thresholds were measured on the default random-forest bundle, whose scores
+are the only ones they describe. Other supported models (logistic regression,
+the single tree, Jaccard k-NN) have different score scales and need their own
+calibration before these cut-offs are trusted. See ``docs/reliability.md``.
 """
+
+import math
 
 # Keys must match the dataset labels exactly, including the upstream typos.
 # Do not "fix" the spelling here without updating the dataset and bundle.
@@ -65,6 +69,16 @@ EMERGENCY_LABELS = frozenset({"Heart attack", "Paralysis (brain hemorrhage)"})
 SPECIALTY_THRESHOLD = 0.6
 EMERGENCY_THRESHOLD = 0.3
 
+# The thresholds above were measured on this model's score scale. Other
+# supported candidates produce different scales, so callers should check this
+# before presenting care guidance from a non-default bundle.
+CALIBRATED_MODEL = "random_forest"
+
+
+def is_calibrated(model_name):
+    """Return whether the thresholds describe this model's score scale."""
+    return str(model_name) == CALIBRATED_MODEL
+
 
 def suggest_care(
     predictions,
@@ -95,22 +109,32 @@ def suggest_care(
     top = ranked[0]
     label = top["label"]
     probability = top.get("probability")
-    if probability is not None:
-        probability = float(probability)
-
-    if (
-        label in EMERGENCY_LABELS
-        and probability is not None
-        and probability >= emergency_threshold
-    ):
-        return _result(
-            "emergency",
-            label=label,
-            probability=probability,
-            reason="emergency-label",
-        )
     if probability is None:
         return _result("uncertain", label=label, reason="no-probability")
+    try:
+        probability = float(probability)
+    except (TypeError, ValueError):
+        return _result("uncertain", label=label, reason="invalid-probability")
+    if not math.isfinite(probability) or not 0 <= probability <= 1:
+        return _result("uncertain", label=label, reason="invalid-probability")
+
+    if label in EMERGENCY_LABELS:
+        if probability >= emergency_threshold:
+            return _result(
+                "emergency",
+                label=label,
+                probability=probability,
+                reason="emergency-label",
+            )
+        # An emergency label that misses its own lower bar must never fall
+        # through to the routine specialty gate, even if the caller has
+        # configured the routine threshold below the emergency threshold.
+        return _result(
+            "uncertain",
+            label=label,
+            probability=probability,
+            reason="emergency-low-confidence",
+        )
     if probability < threshold:
         return _result(
             "uncertain",
