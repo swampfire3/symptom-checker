@@ -30,12 +30,13 @@ class ProbabilityModel(CaptureModel):
 class StubPredictor:
     symptoms = ["cough", "high_fever"]
 
-    def __init__(self, predictions=None):
+    def __init__(self, predictions=None, model_name="random_forest"):
         self.predictions = predictions if predictions is not None else [
-            {"label": "Alpha", "probability": 0.75},
-            {"label": "Beta", "probability": 0.15},
-            {"label": "Gamma", "probability": 0.10},
+            {"label": "Migraine", "probability": 0.75},
+            {"label": "Hypertension", "probability": 0.15},
+            {"label": "Common Cold", "probability": 0.10},
         ]
+        self.model_name = model_name
         self.selected = None
 
     def top_predictions(self, selected_symptoms, k=3):
@@ -82,11 +83,76 @@ def test_form_prediction_renders_ranked_scores(monkeypatch):
 
     assert response.status_code == 200
     assert b"Top dataset labels" in response.data
-    assert b"Alpha" in response.data
+    assert b"Migraine" in response.data
     assert b"75.0%" in response.data
-    assert b"Beta" in response.data
+    assert b"Hypertension" in response.data
     assert b"15.0%" in response.data
     assert b"confidence" in response.data
+
+
+def test_form_prediction_renders_specialty_care(monkeypatch):
+    app.config["TESTING"] = True
+    monkeypatch.setattr(app_module, "predictor", StubPredictor())
+
+    response = app.test_client().post("/predict", data={"symptoms": ["cough"]})
+
+    assert response.status_code == 200
+    assert b"Specialist to read about" in response.data
+    assert b"Neurology" in response.data
+    assert b"not a referral" in response.data
+
+
+def test_form_prediction_renders_emergency_care(monkeypatch):
+    app.config["TESTING"] = True
+    monkeypatch.setattr(
+        app_module,
+        "predictor",
+        StubPredictor(
+            [
+                {"label": "Heart attack", "probability": 0.55},
+                {"label": "GERD", "probability": 0.2},
+            ]
+        ),
+    )
+
+    response = app.test_client().post("/predict", data={"symptoms": ["cough"]})
+
+    assert response.status_code == 200
+    assert b"Urgent care may be appropriate" in response.data
+    assert b"emergency services" in response.data
+    assert b"Heart attack" in response.data
+    assert b"Specialist to read about" not in response.data
+
+
+def test_form_prediction_renders_insufficient_information(monkeypatch):
+    app.config["TESTING"] = True
+    monkeypatch.setattr(
+        app_module,
+        "predictor",
+        StubPredictor([{"label": "Migraine", "probability": 0.2}]),
+    )
+
+    response = app.test_client().post("/predict", data={"symptoms": ["cough"]})
+
+    assert response.status_code == 200
+    assert b"Not enough confidence" in response.data
+    assert b"Specialist to read about" not in response.data
+
+
+def test_uncalibrated_model_withholds_care_guidance(monkeypatch):
+    app.config["TESTING"] = True
+    monkeypatch.setattr(
+        app_module,
+        "predictor",
+        StubPredictor(model_name="logreg"),
+    )
+
+    response = app.test_client().post("/predict", data={"symptoms": ["cough"]})
+
+    assert response.status_code == 200
+    assert b"Care suggestions are unavailable" in response.data
+    assert b"not been calibrated" in response.data
+    assert b"Neurology" not in response.data
 
 
 def test_form_prediction_passes_every_selected_symptom(monkeypatch):
@@ -109,14 +175,35 @@ def test_json_prediction_returns_top_three(monkeypatch):
     response = app.test_client().post("/predict", json={"symptoms": ["cough"]})
 
     assert response.status_code == 200
-    assert response.get_json() == {
-        "prediction": "Alpha",
-        "predictions": [
-            {"label": "Alpha", "probability": 0.75},
-            {"label": "Beta", "probability": 0.15},
-            {"label": "Gamma", "probability": 0.10},
-        ],
-    }
+    body = response.get_json()
+    assert body["prediction"] == "Migraine"
+    assert body["predictions"] == [
+        {"label": "Migraine", "probability": 0.75},
+        {"label": "Hypertension", "probability": 0.15},
+        {"label": "Common Cold", "probability": 0.10},
+    ]
+    assert body["care"]["kind"] == "specialty"
+    assert body["care"]["specialty"] == "Neurology"
+    assert body["care"]["reason"] == "confident"
+    assert body["care"]["title"] == "Specialist to read about"
+    assert "Neurology" in body["care"]["message"]
+
+
+def test_json_prediction_withholds_care_for_uncalibrated_model(monkeypatch):
+    app.config["TESTING"] = True
+    monkeypatch.setattr(
+        app_module,
+        "predictor",
+        StubPredictor(model_name="logreg"),
+    )
+
+    response = app.test_client().post("/predict", json={"symptoms": ["cough"]})
+
+    assert response.status_code == 200
+    care = response.get_json()["care"]
+    assert care["kind"] == "unavailable"
+    assert care["reason"] == "model-not-calibrated"
+    assert care["specialty"] is None
 
 
 def test_form_result_handles_missing_probability(monkeypatch):
@@ -124,14 +211,15 @@ def test_form_result_handles_missing_probability(monkeypatch):
     monkeypatch.setattr(
         app_module,
         "predictor",
-        StubPredictor([{"label": "Alpha", "probability": None}]),
+        StubPredictor([{"label": "Migraine", "probability": None}]),
     )
 
     response = app.test_client().post("/predict", data={"symptoms": ["cough"]})
 
     assert response.status_code == 200
-    assert b"Alpha" in response.data
+    assert b"Migraine" in response.data
     assert b"prediction-score" not in response.data
+    assert b"Not enough confidence" in response.data
 
 
 def test_form_validation_renders_inline_error(monkeypatch):

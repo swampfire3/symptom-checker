@@ -2,6 +2,7 @@
 
 from flask import Flask, jsonify, render_template, request
 
+from src.care import build_care
 from src.predictor import ModelNotReadyError, Predictor
 
 app = Flask(__name__)
@@ -45,6 +46,7 @@ def predict():
 
     try:
         predictions = predictor.top_predictions(selected, k=3)
+        care = build_care(predictions, predictor.model_name)
     except ModelNotReadyError as exc:
         if request.is_json:
             return jsonify(error=str(exc)), 503
@@ -58,8 +60,13 @@ def predict():
         return jsonify(
             prediction=predictions[0]["label"] if predictions else None,
             predictions=predictions,
+            care=care,
         )
-    return _render_index(selected_symptoms=selected, predictions=predictions)
+    return _render_index(
+        selected_symptoms=selected,
+        predictions=predictions,
+        care=care,
+    )
 
 
 if __name__ == "__main__":

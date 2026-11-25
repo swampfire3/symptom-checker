@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/swampfire3/symptom-checker/actions/workflows/tests.yml/badge.svg)](https://github.com/swampfire3/symptom-checker/actions/workflows/tests.yml)
 
-A student project that demonstrates a tree-based classifier behind a Flask interface. Training compares several models and saves a random-forest bundle by default. **It is not a medical device and must not be used to diagnose, treat, or rule out illness.**
+A student project that demonstrates a tree-based classifier behind a Flask interface. Training compares several models and saves a random-forest bundle by default. On top of the ranked labels it adds a confidence-gated, editorial "which specialist" panel that abstains when the model is unsure. **It is not a medical device and must not be used to diagnose, treat, or rule out illness.**
 
 ## Quickstart
 
@@ -81,7 +81,16 @@ Train the model first (see above); without a bundle the page shows a setup messa
 flask --app app run --debug
 ```
 
-Open the local address Flask prints. The symptom list is loaded from the model's feature names, and form input is checked against that list. Results rank the model's three highest-scoring labels and show each score; these are uncalibrated model outputs, not medical probabilities. Validation errors stay on the page so selections can be corrected. Debug mode is for local development only.
+Open the local address Flask prints. The symptom list is loaded from the model's feature names, and form input is checked against that list. Results rank the model's three highest-scoring labels and show each score; these are uncalibrated model outputs, not medical probabilities.
+
+Above that list, the page shows one of four care-suggestion states:
+
+- **specialty** — the top score cleared the gate, so the page names the mapped specialty;
+- **emergency** — the top label is one this project routes to urgent care;
+- **uncertain** — the score is below the gate, so no specialty is named;
+- **unavailable** — the bundle is not the calibrated random-forest build, so care guidance is withheld.
+
+The panel never claims a diagnosis or referral, and it abstains most of the time on short symptom lists. `src/specialties.py` holds the gate, `src/care.py` holds the interface copy, and `docs/reliability.md` explains the thresholds. Validation errors stay on the page so selections can be corrected. Debug mode is for local development only.
 
 For a JSON response:
 
@@ -91,7 +100,7 @@ curl -s http://127.0.0.1:5000/predict \
   -d '{"symptoms":["high_fever","cough"]}'
 ```
 
-The response keeps `prediction` as the top label for compatibility and adds `predictions`, a ranked list of up to three `{"label", "probability"}` entries.
+The response keeps `prediction` as the top label for compatibility and adds `predictions`, a ranked list of up to three `{"label", "probability"}` entries, plus `care`. The `care` object contains `kind` (`specialty`, `emergency`, `uncertain`, or `unavailable`), the gated `label`, `probability`, and `specialty` (when one applies), a `reason` code, and display-ready `title` and `message` text.
 
 ## Tests
 
@@ -108,11 +117,12 @@ GitHub Actions runs the same test suite on Python 3.12 and 3.14 for every push t
 - `src/modeling.py`: candidate models, cross-validation, holdout evaluation, and bundle validation.
 - `src/predictor.py`: model loading, input conversion, and top-3 probability support.
 - `src/specialties.py`: editorial condition-to-specialty mapping and the confidence gate.
+- `src/care.py`: interface copy for each care-gate outcome.
 - `scripts/reliability_eval.py`: regenerates the care-layer reliability tables.
 - `docs/reliability.md`: measured coverage, accuracy, and the chosen thresholds.
 - `train_model.py`: audit, benchmark, evaluate, and save workflow.
 - `templates/` and `static/`: browser interface and styling.
-- `tests/`: preprocessing, modeling, bundle, CLI, and request-validation checks.
+- `tests/`: preprocessing, modeling, bundle, CLI, care-gate, rendering, and request-validation checks.
 - `data/raw/`: tracked source CSVs and their attribution note.
 - `models/`: generated bundle and metrics; ignored by Git.
 - `.github/workflows/tests.yml`: GitHub Actions test workflow.

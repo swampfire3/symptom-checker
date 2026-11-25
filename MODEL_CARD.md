@@ -38,6 +38,20 @@ Holdout accuracy is 1.000 and macro F1 is 1.000 for the random forest with these
 
 These scores mean every unique symptom combination in this dataset maps cleanly to one disease label. That is a property of the dataset, not evidence of real-world diagnostic performance. The scores are not a claim of clinical validity.
 
+## Care suggestions
+
+The web interface adds an educational care-suggestion panel below the ranked labels. It is an editorial lookup table plus a confidence gate, not a referral service.
+
+- Every one of the 41 dataset labels maps to a specialty, for example Migraine → Neurology.
+- `Heart attack` and `Paralysis (brain hemorrhage)` are routed to an urgent-care message instead of a routine specialty. Emergency routing deliberately uses a lower score bar than routine specialties, so it over-flags; the panel says so.
+- A specialty is named only when the top score is at least 0.60. Emergency labels use 0.30. Below the gate the panel says there is not enough confidence and names no specialty.
+- The thresholds were measured on the random-forest bundle only. For any other model build the interface withholds care guidance rather than apply cut-offs that do not describe that model's scores.
+- Every state is labelled as an educational mapping, not a referral or medical advice.
+
+On 2,672 deliberately sparse inputs the gate abstained 84.8% of the time, and all 249 specialty suggestions it made matched the true dataset label. Emergency flags caught 62 of 74 true emergencies with 95 false alarms. These numbers describe gate behaviour on this constructed dataset, not clinical performance. See `docs/reliability.md`.
+
+The mapping and the interface copy were written for this project and have not been reviewed by clinicians.
+
 ## Limitations
 
 - The dataset appears highly templated: 94% of rows are duplicates, and each unique symptom set belongs to a single disease.
