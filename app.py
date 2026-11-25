@@ -45,8 +45,9 @@ def predict():
         return _render_index(error=message), 400
 
     try:
-        predictions = predictor.top_predictions(selected, k=3)
-        care = build_care(predictions, predictor.model_name)
+        analysis = predictor.analyze(selected, k=3)
+        predictions = analysis["predictions"]
+        care = build_care(predictions, analysis["model_name"])
     except ModelNotReadyError as exc:
         if request.is_json:
             return jsonify(error=str(exc)), 503

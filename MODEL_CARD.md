@@ -40,7 +40,7 @@ These scores mean every unique symptom combination in this dataset maps cleanly 
 
 ## Care suggestions
 
-The web interface adds an educational care-suggestion panel below the ranked labels. It is an editorial lookup table plus a confidence gate, not a referral service.
+The web interface adds an educational care-suggestion panel above the ranked labels. It is an editorial lookup table plus a confidence gate, not a referral service.
 
 - Every one of the 41 dataset labels maps to a specialty, for example Migraine → Neurology.
 - `Heart attack` and `Paralysis (brain hemorrhage)` are routed to an urgent-care message instead of a routine specialty. Emergency routing deliberately uses a lower score bar than routine specialties, so it over-flags; the panel says so.

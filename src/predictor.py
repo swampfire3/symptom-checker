@@ -87,10 +87,28 @@ class Predictor:
 
     def top_predictions(self, selected_symptoms, k=3):
         """Return the most likely labels, with probabilities when available."""
+        return self._top_predictions(self._load(), selected_symptoms, k)
+
+    def analyze(self, selected_symptoms, k=3):
+        """Return predictions and the model name from one loaded bundle.
+
+        Reading both from the same snapshot keeps a caller from pairing scores
+        with metadata from a different bundle if the file is replaced between
+        two separate loads.
+        """
+        bundle = self._load()
+        return {
+            "model_name": str(bundle["model_name"]),
+            "predictions": self._top_predictions(bundle, selected_symptoms, k),
+        }
+
+    @staticmethod
+    def _top_predictions(bundle, selected_symptoms, k):
         if not isinstance(k, int) or k < 1:
             raise ValueError("k must be a positive integer.")
-        bundle = self._load()
-        features = self._build_features(selected_symptoms, bundle["feature_names"])
+        features = Predictor._build_features(
+            selected_symptoms, bundle["feature_names"]
+        )
         model = bundle["model"]
         if not hasattr(model, "predict_proba") or not hasattr(model, "classes_"):
             return [

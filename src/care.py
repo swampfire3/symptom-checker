@@ -65,6 +65,11 @@ MESSAGES = {
 
 GENERIC_MESSAGE = "No care suggestion is available for this result."
 
+CAVEAT = (
+    "Educational mapping, not a referral or medical advice. "
+    "For real concerns, contact a qualified clinician."
+)
+
 
 def build_care(predictions, model_name):
     """Return the gate outcome plus display copy for the web interface."""
@@ -96,4 +101,5 @@ def describe_care(outcome):
         "kind": kind,
         "title": TITLES[kind],
         "message": message,
+        "caveat": CAVEAT,
     }

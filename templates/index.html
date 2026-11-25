@@ -35,7 +35,7 @@
             <p class="care-specialty">{{ care.specialty }}</p>
           {% endif %}
           <p class="care-message">{{ care.message }}</p>
-          <p class="care-caveat">Educational mapping, not a referral or medical advice. For real concerns, contact a qualified clinician.</p>
+          <p class="care-caveat">{{ care.caveat }}</p>
         </section>
       {% endif %}
       {% if predictions %}

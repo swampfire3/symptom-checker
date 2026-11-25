@@ -100,7 +100,7 @@ curl -s http://127.0.0.1:5000/predict \
   -d '{"symptoms":["high_fever","cough"]}'
 ```
 
-The response keeps `prediction` as the top label for compatibility and adds `predictions`, a ranked list of up to three `{"label", "probability"}` entries, plus `care`. The `care` object contains `kind` (`specialty`, `emergency`, `uncertain`, or `unavailable`), the gated `label`, `probability`, and `specialty` (when one applies), a `reason` code, and display-ready `title` and `message` text.
+The response keeps `prediction` as the top label for compatibility and adds `predictions`, a ranked list of up to three `{"label", "probability"}` entries, plus `care`. The `care` object contains `kind` (`specialty`, `emergency`, `uncertain`, or `unavailable`), the gated `label`, `probability`, and `specialty` (when one applies), a `reason` code, display-ready `title` and `message` text, and the `caveat` disclaimer, so JSON clients can show the same educational framing as the page.
 
 ## Tests
 

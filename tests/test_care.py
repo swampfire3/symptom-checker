@@ -85,11 +85,59 @@ def test_every_gate_reason_has_copy():
     assert set(TITLES) == {"emergency", "specialty", "uncertain", "unavailable"}
 
 
-@pytest.mark.parametrize("template", sorted(MESSAGES.values()))
-def test_copy_formats_without_missing_fields(template):
-    text = template.format(label="Example condition", specialty="Neurology")
-    assert text.strip()
-    assert "{" not in text
+def kind_for_reason(reason):
+    if reason == "model-not-calibrated":
+        return "unavailable"
+    if reason.startswith("emergency"):
+        return "emergency"
+    if reason == "confident":
+        return "specialty"
+    return "uncertain"
+
+
+@pytest.mark.parametrize("reason", sorted(MESSAGES))
+def test_described_copy_leaves_no_placeholders(reason):
+    care = describe_care(
+        {
+            "kind": kind_for_reason(reason),
+            "reason": reason,
+            "label": "Example condition",
+            "specialty": "Neurology",
+        }
+    )
+
+    assert care["message"].strip()
+    assert "{" not in care["message"]
+    assert "}" not in care["message"]
+    assert care["caveat"]
+
+
+@pytest.mark.parametrize("reason", ["confident", "emergency-label"])
+def test_described_copy_names_the_predicted_label(reason):
+    care = describe_care(
+        {
+            "kind": kind_for_reason(reason),
+            "reason": reason,
+            "label": "Example condition",
+            "specialty": "Neurology",
+        }
+    )
+
+    assert "Example condition" in care["message"]
+
+
+def test_described_copy_names_the_specialty():
+    care = describe_care(
+        {
+            "kind": "specialty",
+            "reason": "confident",
+            "label": "Migraine",
+            "specialty": "Neurology",
+        }
+    )
+
+    assert "Neurology" in care["message"]
+    assert care["caveat"].startswith("Educational mapping")
 
 
 def test_unknown_outcome_falls_back_without_crashing():

@@ -43,6 +43,12 @@ class StubPredictor:
         self.selected = list(selected_symptoms)
         return self.predictions[:k]
 
+    def analyze(self, selected_symptoms, k=3):
+        return {
+            "model_name": self.model_name,
+            "predictions": self.top_predictions(selected_symptoms, k=k),
+        }
+
 
 def write_bundle(path, model, feature_names=("cough", "high_fever"), labels=("Example disease", "Other")):
     bundle = build_bundle(
@@ -187,6 +193,7 @@ def test_json_prediction_returns_top_three(monkeypatch):
     assert body["care"]["reason"] == "confident"
     assert body["care"]["title"] == "Specialist to read about"
     assert "Neurology" in body["care"]["message"]
+    assert "not a referral" in body["care"]["caveat"]
 
 
 def test_json_prediction_withholds_care_for_uncalibrated_model(monkeypatch):
@@ -301,6 +308,48 @@ def test_top_predictions_returns_sorted_probabilities(tmp_path):
         {"label": "Beta", "probability": 0.75},
         {"label": "Gamma", "probability": 0.20},
     ]
+
+
+def test_analyze_returns_model_name_with_its_predictions(tmp_path):
+    predictor = Predictor(
+        write_bundle(
+            tmp_path / "test-model.joblib",
+            ProbabilityModel(),
+            feature_names=("cough",),
+            labels=("Alpha", "Beta", "Gamma"),
+        )
+    )
+
+    analysis = predictor.analyze(["cough"], k=2)
+
+    assert analysis["model_name"] == "test_model"
+    assert analysis["predictions"] == [
+        {"label": "Beta", "probability": 0.75},
+        {"label": "Gamma", "probability": 0.20},
+    ]
+
+
+def test_analyze_loads_the_bundle_once(tmp_path, monkeypatch):
+    predictor = Predictor(
+        write_bundle(
+            tmp_path / "test-model.joblib",
+            ProbabilityModel(),
+            feature_names=("cough",),
+            labels=("Alpha", "Beta", "Gamma"),
+        )
+    )
+    calls = []
+    original = predictor._load
+
+    def counting_load():
+        calls.append(1)
+        return original()
+
+    monkeypatch.setattr(predictor, "_load", counting_load)
+
+    predictor.analyze(["cough"])
+
+    assert len(calls) == 1
 
 
 def test_top_predictions_falls_back_without_probabilities(tmp_path):
