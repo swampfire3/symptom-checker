@@ -28,6 +28,16 @@
         </fieldset>
         <button type="submit">Get an educational prediction</button>
       </form>
+      {% if care %}
+        <section class="care care-{{ care.kind }}" aria-live="polite">
+          <p class="care-title">{{ care.title }}</p>
+          {% if care.kind == 'specialty' and care.specialty %}
+            <p class="care-specialty">{{ care.specialty }}</p>
+          {% endif %}
+          <p class="care-message">{{ care.message }}</p>
+          <p class="care-caveat">{{ care.caveat }}</p>
+        </section>
+      {% endif %}
       {% if predictions %}
         <section class="result" aria-live="polite">
           <h2>Top dataset labels</h2>

@@ -12,6 +12,15 @@ button { border: 0; border-radius: .5rem; padding: .8rem 1.1rem; color: white; b
 button:hover { background: #105341; }
 .notice, .result { padding: 1rem; background: #edf7f3; border-radius: .5rem; }
 .notice.error { margin-bottom: 1rem; color: #8a2c1c; background: #fdf0ed; }
+.care { margin-top: 1.5rem; padding: 1rem 1.25rem; border-left: .35rem solid #24705f; border-radius: .5rem; background: #f1f8f5; }
+.care-title { margin: 0; color: #24705f; font-size: .8rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.care-specialty { margin: .3rem 0 0; font-size: 1.45rem; font-weight: 700; }
+.care-message { margin: .35rem 0 0; line-height: 1.55; }
+.care-caveat { margin: .65rem 0 0; color: #4b625d; font-size: .85rem; line-height: 1.45; }
+.care-emergency { border-color: #a4271a; background: #fdf0ed; }
+.care-emergency .care-title { color: #8a2c1c; }
+.care-uncertain, .care-unavailable { border-color: #8a7a2c; background: #fbf8ea; }
+.care-uncertain .care-title, .care-unavailable .care-title { color: #6d5f1c; }
 .result { margin-top: 1.5rem; }
 .result h2 { margin-top: 0; }
 .result-note { margin: .25rem 0 1rem; color: #4b625d; font-size: .9rem; line-height: 1.5; }
